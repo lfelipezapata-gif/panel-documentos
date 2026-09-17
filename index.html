@@ -128,22 +128,22 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:v
   <div class="aviso" id="nAviso">Escoja la clase de documento para ver el plazo.</div>
 
   <div class="campo"><label>Asunto — de qué se trata</label>
-    <textarea id="nAsunto" placeholder="Ej.: Solicitud de copia del Acta 006"></textarea></div>
+    <textarea id="nAsunto" placeholder="una línea que diga de qué se trata"></textarea></div>
 
   <div class="dos">
     <div class="campo"><label>Fecha del documento</label><input type="date" id="nFechaDoc" onchange="calcVence()"></div>
     <div class="campo"><label>Fecha en que se recibió o radicó</label><input type="date" id="nFechaRec" onchange="calcVence()"></div>
   </div>
   <div class="dos">
-    <div class="campo"><label>Quién lo firma</label><input id="nDe" placeholder="FUNDESAE / ASLO"></div>
-    <div class="campo"><label>A quién va</label><input id="nPara" placeholder="Aqualia"></div>
+    <div class="campo"><label>Quién lo firma</label><input id="nDe" placeholder="quién firma"></div>
+    <div class="campo"><label>A quién va</label><input id="nPara" placeholder="la contraparte"></div>
   </div>
   <div class="dos">
     <div class="campo"><label>Empresa a la que corresponde</label>
-      <select id="nParte"><option>Aqualia</option><option>SEACOR</option><option>Aseguradora</option><option>Municipio</option><option>Fiduciaria</option><option>Autoridad</option><option>Otro</option></select></div>
+      <select id="nParte"></select></div>
     <div class="campo"><label>Número de radicado</label><input id="nRad" placeholder="opcional"></div>
   </div>
-  <div class="campo"><label>Quién queda a cargo</label><input id="nResp" placeholder="Carmen Lucía"></div>
+  <div class="campo"><label>Quién queda a cargo</label><input id="nResp" placeholder="nombre de quien lo tiene"></div>
   <div class="campo"><label>Notas</label><textarea id="nNotas" placeholder="opcional"></textarea></div>
   <div class="campo"><label>Escaneo del oficio (PDF o foto)</label><input type="file" id="nArch" accept="application/pdf,image/*"></div>
 
@@ -158,7 +158,7 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:v
   <h2 id="cTitulo">Marcar como respondido</h2>
   <div class="hint" id="cSub"></div>
   <div class="campo"><label>¿Qué día se respondió?</label><input type="date" id="cFecha"></div>
-  <div class="campo"><label>¿Con qué documento se cerró?</label><input id="cCon" placeholder="Ej.: Oficio FUNDESAE-L055-2026"></div>
+  <div class="campo"><label>¿Con qué documento se cerró?</label><input id="cCon" placeholder="número o nombre del oficio"></div>
   <div class="campo"><label>Escaneo de la respuesta (opcional)</label><input type="file" id="cArch" accept="application/pdf,image/*"></div>
   <div class="msg" id="cMsg"></div>
   <div class="acciones">
@@ -230,14 +230,14 @@ function fmt(f){
 }
 function hoyISO(){var f=new Date();return f.getFullYear()+"-"+String(f.getMonth()+1).padStart(2,"0")+"-"+String(f.getDate()).padStart(2,"0");}
 
-var DIR="SALE";
+var DIR="SALE", NUESTRO="";
 function setDir(v){
   DIR=v;
   document.getElementById('bSale').className  = v==="SALE"?"on":"";
   document.getElementById('bEntra').className = v==="ENTRA"?"on":"";
   var de=document.getElementById('nDe'), pa=document.getElementById('nPara');
-  if(v==="SALE"){ if(!de.value) de.value="FUNDESAE / ASLO"; }
-  else { if(!pa.value) pa.value="FUNDESAE / ASLO"; }
+  if(v==="SALE"){ if(!de.value && NUESTRO) de.value=NUESTRO; }
+  else { if(!pa.value && NUESTRO) pa.value=NUESTRO; }
 }
 function calcVence(){
   var i=document.getElementById('nTipo').selectedIndex, T=TIPOS[i]||TIPOS[0];
@@ -252,6 +252,14 @@ function calcVence(){
 function abrirNuevo(){
   var sel=document.getElementById('nTipo');
   if(!sel.options.length) TIPOS.forEach(function(T){var o=document.createElement('option');o.textContent=T.t;sel.appendChild(o);});
+  var sp=document.getElementById('nParte');
+  if(!sp.options.length){
+    var vistas=[];
+    DATOS.forEach(function(d){ if(d.parte && vistas.indexOf(d.parte)<0) vistas.push(d.parte); });
+    vistas.push("Otro");
+    vistas.forEach(function(v){var o=document.createElement('option');o.textContent=v;sp.appendChild(o);});
+  }
+  NUESTRO = (DATOS.find(function(d){return d.dir==="SALE" && d.de;})||{}).de || "";
   document.getElementById('nFechaDoc').value=hoyISO();
   setDir('SALE'); calcVence();
   document.getElementById('nMsg').textContent="";
