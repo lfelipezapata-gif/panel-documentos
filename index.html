@@ -52,6 +52,33 @@ input[type=search]::placeholder{color:var(--gris)}
 .vacio{text-align:center;color:var(--gris);padding:50px 20px}
 .cargando{text-align:center;color:var(--slate);padding:60px 20px;font-size:1.05rem}
 footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:var(--gris);font-size:.78rem;text-align:center}
+
+.acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mini{background:transparent;border:1px solid var(--line);color:var(--oro-t);border-radius:10px;padding:9px 13px;font-size:.84rem;font-weight:600;cursor:pointer}
+.mini:hover{background:var(--navy2)}
+.mini.ok{border-color:var(--verde);color:var(--verde)}
+.mini.esc{border-color:var(--azul);color:var(--azul)}
+.ver{color:var(--azul);font-size:.83rem;text-decoration:none;font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(5,12,24,.86);display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;z-index:50}
+.modal.on{display:flex}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;max-width:620px;width:100%;margin:auto}
+.box h2{font-size:1.2rem;margin-bottom:4px}
+.box .hint{color:var(--slate);font-size:.85rem;margin-bottom:18px}
+.campo{margin-bottom:14px}
+.campo label{display:block;font-size:.85rem;color:var(--slate);margin-bottom:6px;font-weight:600}
+.campo input,.campo select,.campo textarea{width:100%;background:var(--navy);border:1px solid var(--line);border-radius:10px;color:#fff;padding:12px 13px;font-size:1rem;font-family:inherit}
+.campo textarea{min-height:70px;resize:vertical}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pick{display:flex;gap:10px}
+.pick button{flex:1;background:var(--navy);border:1px solid var(--line);color:var(--slate);border-radius:10px;padding:14px;font-size:.95rem;font-weight:700;cursor:pointer}
+.pick button.on{border-color:var(--oro);background:var(--navy2);color:var(--oro-t)}
+.aviso{background:rgba(76,154,232,.12);border:1px solid rgba(76,154,232,.35);border-radius:10px;padding:12px 14px;font-size:.9rem;color:#cfe3fb;margin-bottom:14px}
+.aviso b{color:#fff}
+.acciones{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.msg{margin-top:12px;font-size:.9rem}
+.msg.err{color:var(--rojo)} .msg.ok{color:var(--verde)}
+@media(max-width:600px){.dos{grid-template-columns:1fr}.box{padding:16px}}
+
 @media(max-width:600px){
   body{padding:12px;padding-bottom:50px} h1{font-size:1.22rem}
   .tile .n{font-size:1.7rem} .asunto{font-size:1rem}
@@ -71,7 +98,8 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:v
   <div class="bar">
     <input type="search" id="q" placeholder="Buscar por asunto, empresa o persona…">
     <button class="btn" onclick="cargar()">Actualizar</button>
-    <a class="btn alt" id="editar" target="_blank" rel="noopener">Registrar documento</a>
+    <button class="btn" onclick="abrirNuevo()">+ Registrar documento</button>
+    <a class="btn alt" id="editar" target="_blank" rel="noopener">Abrir la hoja</a>
   </div>
 
   <div id="lista"><div class="cargando">Cargando el tablero…</div></div>
@@ -82,8 +110,254 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:v
   </footer>
 </div>
 
+<div class="modal" id="mNuevo"><div class="box">
+  <h2>Registrar un documento</h2>
+  <div class="hint">Llene lo que sepa. El tiempo de respuesta lo calcula el tablero.</div>
+
+  <div class="campo"><label>¿El documento sale o entra?</label>
+    <div class="pick">
+      <button type="button" id="bSale"  onclick="setDir('SALE')">Lo mandamos nosotros</button>
+      <button type="button" id="bEntra" onclick="setDir('ENTRA')">Nos lo mandaron</button>
+    </div>
+  </div>
+
+  <div class="campo"><label>¿Qué clase de documento es?</label>
+    <select id="nTipo" onchange="calcVence()"></select>
+  </div>
+
+  <div class="aviso" id="nAviso">Escoja la clase de documento para ver el plazo.</div>
+
+  <div class="campo"><label>Asunto — de qué se trata</label>
+    <textarea id="nAsunto" placeholder="Ej.: Solicitud de copia del Acta 006"></textarea></div>
+
+  <div class="dos">
+    <div class="campo"><label>Fecha del documento</label><input type="date" id="nFechaDoc" onchange="calcVence()"></div>
+    <div class="campo"><label>Fecha en que se recibió o radicó</label><input type="date" id="nFechaRec" onchange="calcVence()"></div>
+  </div>
+  <div class="dos">
+    <div class="campo"><label>Quién lo firma</label><input id="nDe" placeholder="FUNDESAE / ASLO"></div>
+    <div class="campo"><label>A quién va</label><input id="nPara" placeholder="Aqualia"></div>
+  </div>
+  <div class="dos">
+    <div class="campo"><label>Empresa a la que corresponde</label>
+      <select id="nParte"><option>Aqualia</option><option>SEACOR</option><option>Aseguradora</option><option>Municipio</option><option>Fiduciaria</option><option>Autoridad</option><option>Otro</option></select></div>
+    <div class="campo"><label>Número de radicado</label><input id="nRad" placeholder="opcional"></div>
+  </div>
+  <div class="campo"><label>Quién queda a cargo</label><input id="nResp" placeholder="Carmen Lucía"></div>
+  <div class="campo"><label>Notas</label><textarea id="nNotas" placeholder="opcional"></textarea></div>
+  <div class="campo"><label>Escaneo del oficio (PDF o foto)</label><input type="file" id="nArch" accept="application/pdf,image/*"></div>
+
+  <div class="msg" id="nMsg"></div>
+  <div class="acciones">
+    <button class="btn alt" onclick="cerrarModal('mNuevo')">Cancelar</button>
+    <button class="btn" id="nGuardar" onclick="guardarNuevo()">Guardar</button>
+  </div>
+</div></div>
+
+<div class="modal" id="mCerrar"><div class="box">
+  <h2 id="cTitulo">Marcar como respondido</h2>
+  <div class="hint" id="cSub"></div>
+  <div class="campo"><label>¿Qué día se respondió?</label><input type="date" id="cFecha"></div>
+  <div class="campo"><label>¿Con qué documento se cerró?</label><input id="cCon" placeholder="Ej.: Oficio FUNDESAE-L055-2026"></div>
+  <div class="campo"><label>Escaneo de la respuesta (opcional)</label><input type="file" id="cArch" accept="application/pdf,image/*"></div>
+  <div class="msg" id="cMsg"></div>
+  <div class="acciones">
+    <button class="btn alt" onclick="cerrarModal('mCerrar')">Cancelar</button>
+    <button class="btn" id="cGuardar" onclick="guardarCierre()">Marcar respondido</button>
+  </div>
+</div></div>
+
+<div class="modal" id="mRecibo"><div class="box">
+  <h2>Confirmar que ya salió o llegó</h2>
+  <div class="hint" id="rSub"></div>
+  <div class="aviso">El plazo empieza a contar desde esta fecha, no desde la del documento.</div>
+  <div class="campo"><label>¿Qué día se entregó o se recibió?</label><input type="date" id="rFecha"></div>
+  <div class="campo"><label>Constancia de entrega o escaneo sellado</label><input type="file" id="rArch" accept="application/pdf,image/*"></div>
+  <div class="msg" id="rMsg"></div>
+  <div class="acciones">
+    <button class="btn alt" onclick="cerrarModal('mRecibo')">Cancelar</button>
+    <button class="btn" id="rGuardar" onclick="guardarRecibo()">Guardar</button>
+  </div>
+</div></div>
+
 <script>
-const SHEET=(location.hash||"").replace(/^#/,"").trim();
+const SHEET=((location.hash||"").replace(/^#/,"").split(",")[0]||"").trim();
+
+// ---------- API de escritura (la URL viene en la misma direccion, despues de una coma) ----------
+var API = "";
+(function(){
+  var h=(location.hash||"").replace(/^#/,"");
+  var p=h.split(",");
+  if(p.length>1) API=decodeURIComponent(p[1]).trim();
+})();
+
+// ---------- catalogo de plazos ----------
+var TIPOS=[
+ {t:"— escoja —",                                         d:0,  r:""},
+ {t:"Inicio o reanudación de proceso de multas",          d:30, r:"Acta 006: 30 h. desde recibo"},
+ {t:"Descargos del operador",                             d:30, r:"Acta 006: 30 h. desde recibo"},
+ {t:"Decisión del contratante sobre los descargos",       d:15, r:"Acta 006: 15 h."},
+ {t:"Plazo para que el operador pague la multa",          d:45, r:"Acta 006: 45 h."},
+ {t:"Inicio del cobro coactivo",                          d:10, r:"Acta 006: 10 h."},
+ {t:"Derecho de petición — información general",          d:15, r:"Ley 1755/2015 art. 14"},
+ {t:"Derecho de petición — copia de documentos",          d:10, r:"Ley 1755/2015 art. 14 num. 1"},
+ {t:"Derecho de petición — consulta",                     d:30, r:"Ley 1755/2015 art. 14 num. 2"},
+ {t:"Requerimiento contractual",                          d:15, r:"Fijado en el oficio"},
+ {t:"Oficio de supervisión por incumplimiento",           d:15, r:"Fijado en el oficio"},
+ {t:"Citación a audiencia o mesa de trabajo",             d:0,  r:"Fijado en el oficio"},
+ {t:"Oposición de la aseguradora",                        d:30, r:"Se resuelve en el acto definitivo"},
+ {t:"Acta, reunión o hito (sin plazo)",                   d:0,  r:""},
+ {t:"Comunicación que no exige respuesta",                d:0,  r:""}
+];
+
+var FEST=["2025-01-01","2025-01-06","2025-03-24","2025-04-17","2025-04-18","2025-05-01","2025-06-02","2025-06-23","2025-06-30","2025-07-20","2025-08-07","2025-08-18","2025-10-13","2025-11-03","2025-11-17","2025-12-08","2025-12-25","2026-01-01","2026-01-12","2026-03-23","2026-04-02","2026-04-03","2026-05-01","2026-05-18","2026-06-08","2026-06-15","2026-06-29","2026-07-20","2026-08-07","2026-08-17","2026-10-12","2026-11-02","2026-11-16","2026-12-08","2026-12-25","2027-01-01","2027-01-11","2027-03-22","2027-03-25","2027-03-26","2027-05-01","2027-05-10","2027-05-31","2027-06-07","2027-07-05","2027-07-20","2027-08-07","2027-08-16","2027-10-18","2027-11-01","2027-11-15","2027-12-08","2027-12-25"];
+
+function esHabil(f){
+  var d=f.getDay(); if(d===0||d===6) return false;
+  var s=f.getFullYear()+"-"+String(f.getMonth()+1).padStart(2,"0")+"-"+String(f.getDate()).padStart(2,"0");
+  return FEST.indexOf(s)<0;
+}
+function sumarHabiles(iso,n){
+  if(!iso||!n) return null;
+  var f=new Date(iso+"T12:00:00"), c=0;
+  while(c<n){ f.setDate(f.getDate()+1); if(esHabil(f)) c++; }
+  return f;
+}
+function fmt(f){
+  var dias=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+  var mes=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  return dias[f.getDay()]+" "+f.getDate()+" de "+mes[f.getMonth()]+" de "+f.getFullYear();
+}
+function hoyISO(){var f=new Date();return f.getFullYear()+"-"+String(f.getMonth()+1).padStart(2,"0")+"-"+String(f.getDate()).padStart(2,"0");}
+
+var DIR="SALE";
+function setDir(v){
+  DIR=v;
+  document.getElementById('bSale').className  = v==="SALE"?"on":"";
+  document.getElementById('bEntra').className = v==="ENTRA"?"on":"";
+  var de=document.getElementById('nDe'), pa=document.getElementById('nPara');
+  if(v==="SALE"){ if(!de.value) de.value="FUNDESAE / ASLO"; }
+  else { if(!pa.value) pa.value="FUNDESAE / ASLO"; }
+}
+function calcVence(){
+  var i=document.getElementById('nTipo').selectedIndex, T=TIPOS[i]||TIPOS[0];
+  var base=document.getElementById('nFechaRec').value||document.getElementById('nFechaDoc').value;
+  var a=document.getElementById('nAviso');
+  if(!T.d){ a.innerHTML="Este documento <b>no tiene plazo</b> asociado. Queda registrado sin contar días."; return; }
+  if(!base){ a.innerHTML="Plazo: <b>"+T.d+" días hábiles</b>. Ponga la fecha para ver cuándo vence."; return; }
+  var v=sumarHabiles(base,T.d);
+  a.innerHTML="Plazo: <b>"+T.d+" días hábiles</b> · vence el <b>"+fmt(v)+"</b>"+
+    (document.getElementById('nFechaRec').value?"":"<br><span style='opacity:.8'>Contado desde la fecha del documento. Si pone la de recibo, se recalcula.</span>");
+}
+function abrirNuevo(){
+  var sel=document.getElementById('nTipo');
+  if(!sel.options.length) TIPOS.forEach(function(T){var o=document.createElement('option');o.textContent=T.t;sel.appendChild(o);});
+  document.getElementById('nFechaDoc').value=hoyISO();
+  setDir('SALE'); calcVence();
+  document.getElementById('nMsg').textContent="";
+  document.getElementById('mNuevo').classList.add('on');
+}
+function cerrarModal(id){ document.getElementById(id).classList.remove('on'); }
+
+function leerArchivo(input, cb){
+  var f=input.files&&input.files[0];
+  if(!f) return cb(null);
+  if(f.size>7000000){ return cb({error:"El archivo pesa más de 7 MB. Use uno más liviano."}); }
+  var r=new FileReader();
+  r.onload=function(){ cb({b64:String(r.result).split(",")[1], nombre:f.name, tipo:f.type}); };
+  r.onerror=function(){ cb({error:"No se pudo leer el archivo."}); };
+  r.readAsDataURL(f);
+}
+function enviar(datos, cb){
+  if(!API){ return cb({ok:false,error:"Este tablero está en modo solo lectura. Pida el enlace completo."}); }
+  fetch(API,{method:"POST",body:JSON.stringify(datos)})
+   .then(function(r){return r.json();})
+   .then(cb)
+   .catch(function(e){ cb({ok:false,error:"No se pudo guardar. Revise la conexión."}); });
+}
+function guardarNuevo(){
+  var m=document.getElementById('nMsg'), b=document.getElementById('nGuardar');
+  var asunto=document.getElementById('nAsunto').value.trim();
+  if(!asunto){ m.className="msg err"; m.textContent="Falta el asunto."; return; }
+  var i=document.getElementById('nTipo').selectedIndex, T=TIPOS[i]||TIPOS[0];
+  b.disabled=true; m.className="msg"; m.textContent="Guardando…";
+  leerArchivo(document.getElementById('nArch'), function(a){
+    if(a&&a.error){ b.disabled=false; m.className="msg err"; m.textContent=a.error; return; }
+    enviar({accion:"nuevo", dir:DIR,
+      fechaDoc:document.getElementById('nFechaDoc').value,
+      fechaRecibo:document.getElementById('nFechaRec').value,
+      de:document.getElementById('nDe').value, para:document.getElementById('nPara').value,
+      radicado:document.getElementById('nRad').value, asunto:asunto,
+      parte:document.getElementById('nParte').value,
+      requiere:T.d?"SÍ":"NO", regla:T.r, dias:T.d,
+      estado:document.getElementById('nFechaRec').value?"ABIERTO":"POR RADICAR",
+      responsable:document.getElementById('nResp').value,
+      notas:document.getElementById('nNotas').value,
+      archivo:a?a.b64:"", archivoNombre:a?a.nombre:"", archivoTipo:a?a.tipo:""
+    }, function(res){
+      b.disabled=false;
+      if(res.ok){ m.className="msg ok"; m.textContent="Guardado como documento N.º "+res.numero;
+        setTimeout(function(){ cerrarModal('mNuevo'); limpiarNuevo(); cargar(); },1200); }
+      else { m.className="msg err"; m.textContent=res.error||"No se pudo guardar."; }
+    });
+  });
+}
+function limpiarNuevo(){
+  ['nAsunto','nFechaRec','nDe','nPara','nRad','nResp','nNotas'].forEach(function(id){document.getElementById(id).value="";});
+  document.getElementById('nArch').value="";
+}
+
+var DOC_ACTUAL=null;
+function abrirCierre(n,asunto){
+  DOC_ACTUAL=n;
+  document.getElementById('cSub').textContent="Documento N.º "+n+" — "+asunto;
+  document.getElementById('cFecha').value=hoyISO();
+  document.getElementById('cCon').value=""; document.getElementById('cArch').value="";
+  document.getElementById('cMsg').textContent="";
+  document.getElementById('mCerrar').classList.add('on');
+}
+function guardarCierre(){
+  var m=document.getElementById('cMsg'), b=document.getElementById('cGuardar');
+  b.disabled=true; m.className="msg"; m.textContent="Guardando…";
+  leerArchivo(document.getElementById('cArch'), function(a){
+    if(a&&a.error){ b.disabled=false; m.className="msg err"; m.textContent=a.error; return; }
+    enviar({accion:"cerrar", numero:DOC_ACTUAL,
+      fechaRespuesta:document.getElementById('cFecha').value,
+      cerradoCon:document.getElementById('cCon').value,
+      archivo:a?a.b64:"", archivoNombre:a?a.nombre:"", archivoTipo:a?a.tipo:""
+    }, function(res){
+      b.disabled=false;
+      if(res.ok){ m.className="msg ok"; m.textContent="Listo, quedó cerrado.";
+        setTimeout(function(){ cerrarModal('mCerrar'); cargar(); },1000); }
+      else { m.className="msg err"; m.textContent=res.error||"No se pudo guardar."; }
+    });
+  });
+}
+function abrirRecibo(n,asunto){
+  DOC_ACTUAL=n;
+  document.getElementById('rSub').textContent="Documento N.º "+n+" — "+asunto;
+  document.getElementById('rFecha').value=hoyISO();
+  document.getElementById('rArch').value=""; document.getElementById('rMsg').textContent="";
+  document.getElementById('mRecibo').classList.add('on');
+}
+function guardarRecibo(){
+  var m=document.getElementById('rMsg'), b=document.getElementById('rGuardar');
+  b.disabled=true; m.className="msg"; m.textContent="Guardando…";
+  leerArchivo(document.getElementById('rArch'), function(a){
+    if(a&&a.error){ b.disabled=false; m.className="msg err"; m.textContent=a.error; return; }
+    enviar({accion:"recibo", numero:DOC_ACTUAL,
+      fechaRecibo:document.getElementById('rFecha').value, estado:"ABIERTO",
+      archivo:a?a.b64:"", archivoNombre:a?a.nombre:"", archivoTipo:a?a.tipo:""
+    }, function(res){
+      b.disabled=false;
+      if(res.ok){ m.className="msg ok"; m.textContent="Listo, el plazo ya cuenta desde esa fecha.";
+        setTimeout(function(){ cerrarModal('mRecibo'); cargar(); },1000); }
+      else { m.className="msg err"; m.textContent=res.error||"No se pudo guardar."; }
+    });
+  });
+}
+document.addEventListener('click',function(e){ if(e.target.classList&&e.target.classList.contains('modal')) e.target.classList.remove('on'); });
+
 const HOJA="Hoja 1";
 if(!SHEET){
   document.getElementById('lista').innerHTML='<div class="vacio">Falta el enlace completo del tablero.<br>Pídalo de nuevo a quien se lo compartió.</div>';
@@ -130,13 +404,13 @@ function esc(s){return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
 window.cb=function(resp){
   const filas=resp.table.rows||[];
   try{
-    const enc=(resp.table.cols||[])[0];
-    const t0=(filas[0]&&filas[0].c&&filas[0].c[0]&&filas[0].c[0].v)||(enc&&enc.label)||"";
-    const partes=String(t0).split("·");
+    var lab=String(((resp.table.cols||[])[0]||{}).label||"");
+    lab=lab.split("Términos en días")[0].trim();
+    var partes=lab.split("·");
     if(partes.length>1){
       document.getElementById('titulo').textContent=partes[0].trim();
       document.getElementById('subtitulo').textContent=partes.slice(1).join("·").trim();
-    }
+    }else if(lab){ document.getElementById('titulo').textContent=lab; }
   }catch(e){}
   DATOS=[];
   filas.forEach(r=>{
@@ -148,7 +422,7 @@ window.cb=function(resp){
       n:num, dir:g(1), fdoc:g(2), frec:g(3), de:g(4), para:g(5), rad:g(6),
       asunto:g(7), parte:g(8), req:g(9), regla:g(10), dias:g(11),
       vence:g(12), faltan:g(13), estado:g(14), fresp:g(15), cerr:g(16),
-      tomo:g(17), resp:g(18), notas:g(19), semTxt:g(20)
+      tomo:g(17), resp:g(18), notas:g(19), semTxt:g(20), escaneo:g(21)
     };
     d.sem=semDe(d.semTxt);
     DATOS.push(d);
@@ -163,6 +437,22 @@ function cargar(){
   s.onerror=()=>{document.getElementById('lista').innerHTML='<div class="vacio">No se pudo cargar. Revise la conexión y toque Actualizar.</div>';};
   document.body.appendChild(s);
   setTimeout(()=>s.remove(),8000);
+}
+
+
+function acciones(d){
+  var b=[];
+  var a=esc(d.asunto).replace(/'/g,"&#39;").slice(0,60);
+  if(d.sem!=="verde"){
+    if(!d.frec) b.push('<button class="mini esc" onclick="abrirRecibo(\''+d.n+'\',\''+a+'\')">Ya salió / ya llegó</button>');
+    b.push('<button class="mini ok" onclick="abrirCierre(\''+d.n+'\',\''+a+'\')">Marcar respondido</button>');
+  }
+  if(d.escaneo){
+    d.escaneo.split("|").forEach(function(u,i){
+      u=u.trim(); if(u) b.push('<a class="ver" href="'+u+'" target="_blank" rel="noopener">Ver escaneo'+(i?" "+(i+1):"")+'</a>');
+    });
+  }
+  return b.length?'<div class="acc">'+b.join("")+'</div>':'';
 }
 
 function pintar(){
@@ -209,6 +499,7 @@ function pintar(){
         (d.sem==="verde"&&d.cerr?'<span>Cerrado con: <b>'+esc(d.cerr)+'</b></span>':'')+
       '</div>'+
       (d.notas?'<div class="nota'+(alerta?' alerta':'')+'">'+esc(d.notas)+'</div>':'')+
+      acciones(d)+
     '</div>';
   }).join("");
 }
