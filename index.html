@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Tablero de documentos · Bajo Sinú</title>
+<title>Tablero de documentos</title>
 <style>
 :root{
   --navy:#0B1F3A; --navy2:#122c52; --oro:#C9A84C; --oro-t:#DCC079;
@@ -61,8 +61,8 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:v
 <body>
 <div class="wrap">
   <header>
-    <h1>Tablero de documentos</h1>
-    <div class="sub">Contrato de Operación N.º 001 de 2008 · Regional Bajo Sinú</div>
+    <h1 id="titulo">Tablero de documentos</h1>
+    <div class="sub" id="subtitulo">&nbsp;</div>
     <div class="upd" id="upd">Cargando…</div>
   </header>
 
@@ -83,14 +83,18 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:v
 </div>
 
 <script>
-const SHEET="1oFg7EvgKl3v9OO__ykXYbTXULd2jVIYo9pqNHVcpUFQ";
+const SHEET=(location.hash||"").replace(/^#/,"").trim();
 const HOJA="Hoja 1";
-document.getElementById('editar').href="https://docs.google.com/spreadsheets/d/"+SHEET+"/edit";
+if(!SHEET){
+  document.getElementById('lista').innerHTML='<div class="vacio">Falta el enlace completo del tablero.<br>Pídalo de nuevo a quien se lo compartió.</div>';
+  document.getElementById('upd').textContent="";
+}
+if(SHEET) document.getElementById('editar').href="https://docs.google.com/spreadsheets/d/"+SHEET+"/edit";
 
-let DATOS=[], filtro="pendientes";
+let DATOS=[], filtro="todo";
 
 const GRUPOS={
-  todo:      {l:"Todos",            f:d=>true,                      c:"todo"},
+  todo:      {l:"TODOS los documentos", f:d=>true,                  c:"todo"},
   pendientes:{l:"Sin cerrar",       f:d=>d.sem!=="verde",           c:"todo"},
   rojo:      {l:"Vencidos",         f:d=>d.sem==="rojo",            c:"rojo"},
   naranja:   {l:"Vencen ya",        f:d=>d.sem==="naranja",         c:"naranja"},
@@ -125,6 +129,15 @@ function esc(s){return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
 
 window.cb=function(resp){
   const filas=resp.table.rows||[];
+  try{
+    const enc=(resp.table.cols||[])[0];
+    const t0=(filas[0]&&filas[0].c&&filas[0].c[0]&&filas[0].c[0].v)||(enc&&enc.label)||"";
+    const partes=String(t0).split("·");
+    if(partes.length>1){
+      document.getElementById('titulo').textContent=partes[0].trim();
+      document.getElementById('subtitulo').textContent=partes.slice(1).join("·").trim();
+    }
+  }catch(e){}
   DATOS=[];
   filas.forEach(r=>{
     const c=r.c||[];
@@ -201,8 +214,7 @@ function pintar(){
 }
 
 document.getElementById('q').addEventListener('input',pintar);
-cargar();
-setInterval(cargar,60000);
+if(SHEET){cargar();setInterval(cargar,60000);}
 </script>
 </body>
 </html>
